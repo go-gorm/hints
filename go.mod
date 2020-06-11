@@ -1,0 +1,12 @@
+module gorm.io/hints
+
+go 1.14
+
+require (
+	github.com/jinzhu/now v1.1.1
+	gorm.io/driver/mysql v0.0.0-20200609004954-b8310c61c3f2
+	gorm.io/driver/postgres v0.0.0-20200602015520-15fcc29eb286
+	gorm.io/driver/sqlite v1.0.0
+	gorm.io/driver/sqlserver v0.0.0-20200610080012-25da0c25e81d
+	gorm.io/gorm v0.2.5
+)
