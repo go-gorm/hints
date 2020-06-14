@@ -17,17 +17,6 @@ type Hints struct {
 	after  bool
 }
 
-type Exprs []clause.Expression
-
-func (exprs Exprs) Build(builder clause.Builder) {
-	for idx, expr := range exprs {
-		if idx > 0 {
-			builder.WriteByte(' ')
-			expr.Build(builder)
-		}
-	}
-}
-
 func (hints Hints) ModifyStatement(stmt *gorm.Statement) {
 	name := strings.ToUpper(hints.clause)
 	if name == "" {
