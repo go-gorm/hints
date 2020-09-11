@@ -5,5 +5,5 @@ go 1.14
 require (
 	github.com/jinzhu/now v1.1.1
 	gorm.io/driver/sqlite v1.1.2
-	gorm.io/gorm v1.20.0
+	gorm.io/gorm v1.20.1
 )
