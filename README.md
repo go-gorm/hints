@@ -1,5 +1,7 @@
 # Hints
 
+![CI](https://github.com/go-gorm/hints/workflows/CI/badge.svg)
+
 Optimizer/Index/Comment Hints support for GORM
 
 ## Optimizer Hints
