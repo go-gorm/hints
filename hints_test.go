@@ -42,6 +42,9 @@ func TestHint(t *testing.T) {
 
 	result = DB.Clauses(hints.CommentAfter("where", "hint")).Find(&User{}, "id = ?", 1)
 	AssertSQL(t, result, "SELECT * FROM `users` WHERE id = ? /* hint */")
+
+	result = DB.Clauses(hints.New("hint")).Model(&User{}).Where("name = ?", "xxx").Update("name", "jinzhu")
+	AssertSQL(t, result, "UPDATE /*+ hint */ `users` SET `name`=? WHERE name = ?")
 }
 
 func TestIndexHint(t *testing.T) {
