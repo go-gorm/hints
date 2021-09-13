@@ -19,7 +19,7 @@ type User struct {
 
 func AssertSQL(t *testing.T, result *gorm.DB, sql string) {
 	if result.Statement.SQL.String() != sql {
-		t.Errorf("SQL expects: %v, got %v", sql, result.Statement.SQL.String())
+		t.Fatalf("SQL expects: %v, got %v", sql, result.Statement.SQL.String())
 	}
 }
 
