@@ -11,15 +11,17 @@ type IndexHint struct {
 }
 
 func (indexHint IndexHint) ModifyStatement(stmt *gorm.Statement) {
-	clause := stmt.Clauses["FROM"]
+	for _, name := range []string{"FROM", "UPDATE"} {
+		clause := stmt.Clauses[name]
 
-	if clause.AfterExpression == nil {
-		clause.AfterExpression = indexHint
-	} else {
-		clause.AfterExpression = Exprs{clause.AfterExpression, indexHint}
+		if clause.AfterExpression == nil {
+			clause.AfterExpression = indexHint
+		} else {
+			clause.AfterExpression = Exprs{clause.AfterExpression, indexHint}
+		}
+
+		stmt.Clauses[name] = clause
 	}
-
-	stmt.Clauses["FROM"] = clause
 }
 
 func (indexHint IndexHint) Build(builder clause.Builder) {

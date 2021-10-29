@@ -62,4 +62,7 @@ func TestIndexHint(t *testing.T) {
 	).Find(&User{})
 
 	AssertSQL(t, result, "SELECT * FROM `users` FORCE INDEX FOR JOIN (`user_name`,`user_id`) IGNORE INDEX FOR GROUP BY (`user_name`)")
+
+	result = DB.Clauses(hints.UseIndex("user_name")).Model(&User{}).Where("name = ?", "xxx").Update("name", "jinzhu")
+	AssertSQL(t, result, "UPDATE `users` USE INDEX (`user_name`) SET `name`=? WHERE name = ?")
 }
