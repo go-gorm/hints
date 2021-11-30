@@ -4,5 +4,5 @@ go 1.14
 
 require (
 	gorm.io/driver/sqlite v1.2.6
-	gorm.io/gorm v1.22.3
+	gorm.io/gorm v1.22.4
 )
