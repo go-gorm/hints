@@ -45,6 +45,10 @@ func TestHint(t *testing.T) {
 
 	result = DB.Clauses(hints.New("hint")).Model(&User{}).Where("name = ?", "xxx").Update("name", "jinzhu")
 	AssertSQL(t, result, "UPDATE /*+ hint */ `users` SET `name`=? WHERE name = ?")
+
+	db := DB.Clauses(hints.New("MAX_EXECUTION_TIME(100)"))
+	result = db.Clauses(hints.New("USE_INDEX(t1, idx1)")).Find(&User{})
+	AssertSQL(t, result, "SELECT /*+ MAX_EXECUTION_TIME(100) USE_INDEX(t1, idx1) */ * FROM `users`")
 }
 
 func TestIndexHint(t *testing.T) {
