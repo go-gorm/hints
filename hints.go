@@ -61,7 +61,7 @@ func (hints Hints) Build(builder clause.Builder) {
 	builder.WriteString(hints.Suffix)
 }
 
-func (hints Hints) Merge(h Hints) {
+func (hints *Hints) Merge(h Hints) {
 	hints.Content += " " + h.Content
 }
 
