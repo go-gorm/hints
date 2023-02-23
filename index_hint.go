@@ -11,16 +11,55 @@ type IndexHint struct {
 }
 
 func (indexHint IndexHint) ModifyStatement(stmt *gorm.Statement) {
-	for _, name := range []string{"FROM", "UPDATE"} {
-		clause := stmt.Clauses[name]
+	fromClause := stmt.Clauses["FROM"]
+	fromClause.Builder = indexHint.ModifyFromExpression
+	stmt.Clauses["FROM"] = fromClause
 
-		if clause.AfterExpression == nil {
-			clause.AfterExpression = indexHint
-		} else {
-			clause.AfterExpression = Exprs{clause.AfterExpression, indexHint}
+	updateClause := stmt.Clauses["UPDATE"]
+	if updateClause.AfterExpression == nil {
+		updateClause.AfterExpression = indexHint
+	} else {
+		updateClause.AfterExpression = Exprs{updateClause.AfterExpression, indexHint}
+	}
+	stmt.Clauses["UPDATE"] = updateClause
+}
+
+func (indexHint IndexHint) ModifyFromExpression(c clause.Clause, builder clause.Builder) {
+	if c.BeforeExpression != nil {
+		c.BeforeExpression.Build(builder)
+		builder.WriteByte(' ')
+	}
+
+	if c.Name != "" {
+		builder.WriteString(c.Name)
+		builder.WriteByte(' ')
+	}
+
+	if c.AfterNameExpression != nil {
+		c.AfterNameExpression.Build(builder)
+		builder.WriteByte(' ')
+	}
+
+	if from, ok := c.Expression.(clause.From); ok {
+		joins := from.Joins
+		from.Joins = nil
+		from.Build(builder)
+
+		// set indexHint in the middle between table and joins
+		builder.WriteByte(' ')
+		indexHint.Build(builder)
+
+		for _, join := range joins {
+			builder.WriteByte(' ')
+			join.Build(builder)
 		}
+	} else {
+		c.Expression.Build(builder)
+	}
 
-		stmt.Clauses[name] = clause
+	if c.AfterExpression != nil {
+		builder.WriteByte(' ')
+		c.AfterExpression.Build(builder)
 	}
 }
 
