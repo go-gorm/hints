@@ -11,55 +11,20 @@ type IndexHint struct {
 }
 
 func (indexHint IndexHint) ModifyStatement(stmt *gorm.Statement) {
-	fromClause := stmt.Clauses["FROM"]
-	fromClause.Builder = indexHint.ModifyFromExpression
-	stmt.Clauses["FROM"] = fromClause
+	for _, name := range []string{"FROM", "UPDATE"} {
+		clause := stmt.Clauses[name]
 
-	updateClause := stmt.Clauses["UPDATE"]
-	if updateClause.AfterExpression == nil {
-		updateClause.AfterExpression = indexHint
-	} else {
-		updateClause.AfterExpression = Exprs{updateClause.AfterExpression, indexHint}
-	}
-	stmt.Clauses["UPDATE"] = updateClause
-}
-
-func (indexHint IndexHint) ModifyFromExpression(c clause.Clause, builder clause.Builder) {
-	if c.BeforeExpression != nil {
-		c.BeforeExpression.Build(builder)
-		builder.WriteByte(' ')
-	}
-
-	if c.Name != "" {
-		builder.WriteString(c.Name)
-		builder.WriteByte(' ')
-	}
-
-	if c.AfterNameExpression != nil {
-		c.AfterNameExpression.Build(builder)
-		builder.WriteByte(' ')
-	}
-
-	if from, ok := c.Expression.(clause.From); ok {
-		joins := from.Joins
-		from.Joins = nil
-		from.Build(builder)
-
-		// set indexHint in the middle between table and joins
-		builder.WriteByte(' ')
-		indexHint.Build(builder)
-
-		for _, join := range joins {
-			builder.WriteByte(' ')
-			join.Build(builder)
+		if clause.AfterExpression == nil {
+			clause.AfterExpression = indexHint
+		} else {
+			clause.AfterExpression = Exprs{clause.AfterExpression, indexHint}
 		}
-	} else {
-		c.Expression.Build(builder)
-	}
 
-	if c.AfterExpression != nil {
-		builder.WriteByte(' ')
-		c.AfterExpression.Build(builder)
+		if name == "FROM" {
+			clause.Builder = IndexHintFromClauseBuilder
+		}
+
+		stmt.Clauses[name] = clause
 	}
 }
 
@@ -102,4 +67,50 @@ func (indexHint IndexHint) ForOrderBy() IndexHint {
 func (indexHint IndexHint) ForGroupBy() IndexHint {
 	indexHint.Type += "FOR GROUP BY "
 	return indexHint
+}
+
+func IndexHintFromClauseBuilder(c clause.Clause, builder clause.Builder) {
+	if c.BeforeExpression != nil {
+		c.BeforeExpression.Build(builder)
+		builder.WriteByte(' ')
+	}
+
+	if c.Name != "" {
+		builder.WriteString(c.Name)
+		builder.WriteByte(' ')
+	}
+
+	if c.AfterNameExpression != nil {
+		c.AfterNameExpression.Build(builder)
+		builder.WriteByte(' ')
+	}
+
+	if from, ok := c.Expression.(clause.From); ok {
+		joins := from.Joins
+		from.Joins = nil
+		from.Build(builder)
+
+		// set indexHints in the middle between table and joins
+		squashExpression(c.AfterExpression, func(expression clause.Expression) {
+			if indexHint, ok := expression.(IndexHint); ok { // pick
+				builder.WriteByte(' ')
+				indexHint.Build(builder)
+			}
+		})
+
+		for _, join := range joins {
+			builder.WriteByte(' ')
+			join.Build(builder)
+		}
+	} else {
+		c.Expression.Build(builder)
+	}
+
+	squashExpression(c.AfterExpression, func(expression clause.Expression) {
+		if _, ok := expression.(IndexHint); ok {
+			return
+		}
+		builder.WriteByte(' ')
+		expression.Build(builder)
+	})
 }
