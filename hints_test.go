@@ -70,3 +70,21 @@ func TestIndexHint(t *testing.T) {
 	result = DB.Clauses(hints.UseIndex("user_name")).Model(&User{}).Where("name = ?", "xxx").Update("name", "jinzhu")
 	AssertSQL(t, result, "UPDATE `users` USE INDEX (`user_name`) SET `name`=? WHERE name = ?")
 }
+
+type User2 struct {
+	ID        int64
+	Name      string `gorm:"index"`
+	CompanyID *int
+	Company   Company
+}
+
+type Company struct {
+	ID   int
+	Name string
+}
+
+func TestJoinIndexHint(t *testing.T) {
+	result := DB.Clauses(hints.ForceIndex("user_name")).Joins("Company").Find(&User2{})
+
+	AssertSQL(t, result, "SELECT `user2`.`id`,`user2`.`name`,`user2`.`company_id`,`Company`.`id` AS `Company__id`,`Company`.`name` AS `Company__name` FROM `user2` FORCE INDEX (`user_name`) LEFT JOIN `companies` `Company` ON `user2`.`company_id` = `Company`.`id`")
+}

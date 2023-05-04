@@ -12,3 +12,13 @@ func (exprs Exprs) Build(builder clause.Builder) {
 		expr.Build(builder)
 	}
 }
+
+func squashExpression(expression clause.Expression, do func(expression clause.Expression)) {
+	if exprs, ok := expression.(Exprs); ok {
+		for _, expr := range exprs {
+			squashExpression(expr, do)
+		}
+	} else if expression != nil {
+		do(expression)
+	}
+}
