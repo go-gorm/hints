@@ -3,6 +3,7 @@ module gorm.io/hints
 go 1.16
 
 require (
-	gorm.io/driver/sqlite v1.4.2
-	gorm.io/gorm v1.24.0
+	github.com/mattn/go-sqlite3 v1.14.16 // indirect
+	gorm.io/driver/sqlite v1.5.0
+	gorm.io/gorm v1.25.0
 )
